@@ -3,10 +3,10 @@
 
 > Create dist version of your JS.
 
-Combines tools for adding comptibility and optimizations to your js compiler's
+Combines tools for adding comptibility and optimizations to your JS compiler's
 output.
 
-```
+```sh
 $ dist-js dist/app.js
 ```
 
@@ -16,9 +16,11 @@ This will
 - Run `babel` with `babel-preset-env` on the input
 - Run `uglify-es` on the results
 
+Also see [`dist-css`](https://github.com/jamen/dist-css) for your CSS files.
+
 ## Install
 
-```
+```sh
 $ npm i -D dist-js
 ```
 
@@ -26,13 +28,13 @@ $ npm i -D dist-js
 
 The easiest way to use the tool is transforming a file in place:
 
-```
+```sh
 $ dist-js dist/app.js
 ```
 
 It will also detect when you want to use stdio:
 
-```
+```sh
 # Using stdout
 $ dist-js dist/app.js | wc -c
 6780
@@ -52,8 +54,8 @@ Also note that you can only accept a sourcemap with an input path, and write a
 sourcemap with an output path.  Inline sourcemaps are not supported out of
 simplicity.
 
-To disable sourcemaps regardless, supply the `--no-sourcemaps` flag:
+To disable sourcemaps regardless, supply the `--no-sourcemap` flag:
 
-```
-$ dist-js --no-sourcemaps dist/app.js
+```sh
+$ dist-js --no-sourcemap dist/app.js
 ```
