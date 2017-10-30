@@ -1,19 +1,20 @@
 
-# dist-js (WIP)
+# dist-js
 
 > Create dist version of your JS.
 
-Combines multiple tools for easily creating dist version of your JS.
+Combines tools for adding comptibility and optimizations to your js compiler's
+output.
 
 ```
-$ dist-js -f dist/app.js
+$ dist-js dist/app.js
 ```
 
 This will
 
-- Run `babel` with `babel-preset-env`
-- Run `uglify-es` on the results of babel
-- Create `.js.map` beside the output
+- Manage a sourcemap file that comes beside an input file
+- Run `babel` with `babel-preset-env` on the input
+- Run `uglify-es` on the results
 
 ## Install
 
@@ -21,22 +22,38 @@ This will
 $ npm i -D dist-js
 ```
 
-### `dist-js [...options]`
+### `dist-js [file] [...options]`
 
- - `--input`, `-i` the input file to compile
- - `--output`, `-o` the output file
- - `--file`, `-f` shorthand for when `-i` and `-o` are the same.
- - `--sourcemap`, `-m` enable sourcemaps (on by default)
-
-When no input or output are provided, it reads from stdio.
-
-Example usages:
+The easiest way to use the tool is transforming a file in place:
 
 ```
-dist-js -f dist/app.js
-dist-js --no-sourcemap -f dist/app.js
-dist-js -i web/app.js -o dist/app.js
+$ dist-js dist/app.js
+```
 
-# From stdio
-cat dist/app.js | dist-js > dist/app.js
+It will also detect when you want to use stdio:
+
+```
+# Using stdout
+$ dist-js dist/app.js | wc -c
+6780
+
+# Using stdin
+$ echo "console.log(1 + 2)" | dist-js dist/app.js
+finished dist-js at dist/app.js
+
+# Using both
+$ echo "1 + 2" | dist-js > dist/app.js
+```
+
+Alternative to this, use the `--input`, `-i` and `--output`, `-o` flags, where
+if a flag is absent it uses the stdio equivalent instead.
+
+Also note that you can only accept a sourcemap with an input path, and write a
+sourcemap with an output path.  Inline sourcemaps are not supported out of
+simplicity.
+
+To disable sourcemaps regardless, supply the `--no-sourcemaps` flag:
+
+```
+$ dist-js --no-sourcemaps dist/app.js
 ```

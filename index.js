@@ -5,35 +5,49 @@ const path = require('path')
 const babel = require('babel-core')
 const uglify = require('uglify-es')
 
-const cli = require('minimist')(process.argv.slice(2), {
-  default: {
-    sourcemap: true,
-  },
+const options = require('minimist')(process.argv.slice(2), {
+  boolean: ['sourcemap'],
   alias: {
-    sourcemap: 'm',
     output: 'o',
-    input: 'i',
-    file: 'f'
+    input: 'i'
   }
 })
 
-// Shortcut for transforming a single file
-if (cli.file) cli.input = cli.output = cli.file
+const hasStdout = !process.stdout.isTTY
+const hasStdin = !process.stdin.isTTY
+const noStdio = !hasStdout && !hasStdin
 
-// Create streams from input/output options
-const input = cli.input ? fs.createReadStream(path.resolve(cli.input)) : process.stdin
-//const output = cli.output ? fs.createWriteStream(path.resolve(cli.output)) : process.stdout
+if (options._[0]) {
+  if (noStdio) options.file = options._[0]
+  else if (hasStdout) options.input = options._[0]
+  else if (hasStdin) options.output = options._[0]
+}
+
+// Shortcut for transforming a single file
+if (options.file) options.input = options.output = options.file
+
+// Handle detection of sourcemap
+const hasSourcemap = options.sourcemap != null
+if (!options.output && hasSourcemap) {
+  throw new Error('sourcemap requires an output path')
+} else if (!hasSourcemap) {
+  options.sourcemap = !!options.output
+}
+
+// Create input stream from file or stdin
+const input = options.input
+  ? fs.createReadStream(path.resolve(options.input))
+  : process.stdin
 
 // Read data
 const bufs = []
 input.on('data', x => bufs.push(x))
-input.on('end', () => maybeSourcemap(Buffer.concat(bufs)))
+input.on('end', () => sourcemapMaybe(Buffer.concat(bufs)))
 
-function maybeSourcemap (js) {
-  const sourcemap = cli.sourcemap
-  if (sourcemap && cli.output) {
-    const sourcemapPath = path.resolve(sourcemap !== true ? sourcemap : cli.output + '.map')
-    fs.readFile(sourcemapPath, 'utf8', (err, data) => {
+// Read sourcemap maybe
+function sourcemapMaybe (js) {
+  if (options.sourcemap) {
+    fs.readFile(path.resolve(options.output + '.map'), 'utf8', (err, data) => {
       write(js, data)
     })
   } else {
@@ -43,29 +57,38 @@ function maybeSourcemap (js) {
 
 function write (js, sourcemapInput) {
   compile(js, sourcemapInput).then(result => {
-    if (result.map) {
-      sourcemapInput = JSON.stringify(result.map)
-    }
-
+    if (result.map) sourcemapInput = JSON.stringify(result.map)
     return minify(result.code, sourcemapInput)
   }).then(result => {
     return new Promise((resolve, reject) => {
-      let didOther = false
+      let lock = true
 
-      if (result.map) {
-        fs.writeFile(cli.output + '.map', result.map, (err) => {
+      if (options.sourcemap && result.map) {
+        fs.writeFile(options.output + '.map', result.map, (err) => {
           if (err) return reject(err)
-          if (didOther) return resolve()
-          else didOther = true
+          if (!lock) return resolve()
+          else lock = false
         })
       }
 
-      fs.writeFile(cli.output, result.code, (err) => {
-        if (err) return reject(err)
-        if (didOther) return resolve()
-        else didOther = true
-      })
+      if (options.output) {
+        fs.writeFile(options.output, result.code, (err) => {
+          if (err) return reject(err)
+          if (!lock) return resolve()
+          else lock = false
+        })
+      } else {
+        process.stdout.write(result.code)
+        if (!lock) resolve()
+        else lock = false
+      }
     })
+  }).then(() => {
+    if (!hasStdout) {
+      console.log(`finished dist-js at ${options.output}`)
+    }
+  }).catch(err => {
+    console.error(err)
   })
 }
 
@@ -89,10 +112,10 @@ function minify (js, sourcemapInput) {
   return new Promise((resolve, reject) => {
     const uglifyOpts = {}
 
-    if (sourcemapInput && cli.output) {
+    if (options.sourcemap && sourcemapInput) {
       uglifyOpts.sourceMap = {
         content: sourcemapInput,
-        url: cli.output + '.map'
+        url: path.basename(options.output) + '.map'
       }
     }
 
