@@ -2,13 +2,15 @@
   "name": "dist-js",
   "version": "0.2.0",
   "description": "Create dist version of your JS.",
-  "bin": "./index.js",
+  "bin": "./bin/dist-js",
   "repository": "jamen/dist-js",
   "author": "Jamen Marz <jamenmarz@gmail.com>",
   "license": "MIT",
   "keywords": [
     "dist",
-    "js"
+    "js",
+    "uglify",
+    "babel"
   ],
   "bugs": {
     "url": "https://github.com/jamen/dist-js/issues"

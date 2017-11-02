@@ -12,9 +12,9 @@ $ dist-js dist/app.js
 
 This will
 
-- Manage a sourcemap file that comes beside an input file
-- Run `babel` with `babel-preset-env` on the input
-- Run `uglify-es` on the results
+- Run `babel` with `babel-preset-env`.
+- Run `uglify-es`.
+- Use sourcemaps when given input and output paths.
 
 Also see [`dist-css`](https://github.com/jamen/dist-css) for your CSS files.
 
