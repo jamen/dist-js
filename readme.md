@@ -1,5 +1,5 @@
 
-# dist-js
+# @jamen/dist-js
 
 > Create dist version of your JS.
 
@@ -16,7 +16,7 @@ This will
 - Run `uglify-es`.
 - Use sourcemaps when given input and output paths.
 
-Also see [`dist-css`](https://github.com/jamen/dist-css) for your CSS files.
+Also see [`@jamen/dist-css`](https://github.com/jamen/dist-css) for your CSS files.
 
 ## Install
 

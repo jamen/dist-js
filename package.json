@@ -1,5 +1,5 @@
 {
-  "name": "dist-js",
+  "name": "@jamen/dist-js",
   "version": "0.3.0",
   "description": "Create dist version of your JS.",
   "bin": "./bin/dist-js",
