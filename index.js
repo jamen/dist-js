@@ -61,26 +61,30 @@ function write (js, sourcemapInput) {
     return minify(result.code, sourcemapInput)
   }).then(result => {
     return new Promise((resolve, reject) => {
-      let lock = true
-
-      if (options.sourcemap && result.map) {
-        fs.writeFile(options.output + '.map', result.map, (err) => {
-          if (err) return reject(err)
-          if (!lock) return resolve()
-          else lock = false
-        })
+      const finish = (err) => {
+        if (err) reject(err)
+        else resolve()
       }
 
-      if (options.output) {
-        fs.writeFile(options.output, result.code, (err) => {
+      const output = (done) => {
+        if (options.output) {
+          fs.writeFile(options.output, result.code, (err) => {
+            if (err) done(err)
+            else done()
+          })
+        } else {
+          process.stdout.write(result.code)
+          done()
+        }
+      }
+
+      if (options.sourcemap && result.map) {
+        output(err => {
           if (err) return reject(err)
-          if (!lock) return resolve()
-          else lock = false
+          fs.writeFile(options.output + '.map', result.map, finish)
         })
       } else {
-        process.stdout.write(result.code)
-        if (!lock) resolve()
-        else lock = false
+        output(finish)
       }
     })
   }).then(() => {
@@ -96,7 +100,7 @@ function compile (js, sourcemapInput) {
   return new Promise((resolve, reject) => {
     const babelOpts = {
       presets: [
-        [path.join(__dirname, 'node_modules/babel-preset-env'), { modules: false }]
+        ['babel-preset-env', { modules: false }]
       ]
     }
 
@@ -115,7 +119,7 @@ function minify (js, sourcemapInput) {
     if (options.sourcemap && sourcemapInput) {
       uglifyOpts.sourceMap = {
         content: sourcemapInput,
-        url: path.basename(options.output) + '.map'
+        url: path.relative(options.output) + '.map'
       }
     }
 
